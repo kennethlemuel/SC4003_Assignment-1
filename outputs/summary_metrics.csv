@@ -1,0 +1,5 @@
+environment,algorithm,num_states,iterations,runtime_seconds,converged,policy_match_between_methods,max_utility_difference_between_methods
+part1_maze,value_iteration,31,1833,0.21160670900000003,True,True,9.984164819343277e-07
+part1_maze,policy_iteration,31,5,0.0008151249999999721,True,True,9.984164819343277e-07
+part2_complex_maze,value_iteration,67,1821,0.45097537500000007,True,True,9.949790751306864e-07
+part2_complex_maze,policy_iteration,67,7,0.0022983749999998526,True,True,9.949790751306864e-07
