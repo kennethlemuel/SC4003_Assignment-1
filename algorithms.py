@@ -24,7 +24,7 @@ def value_iteration(
     epsilon: float = 1e-6,
     max_iterations: int = 20_000,
 ) -> AlgorithmResult:
-    """Run Bellman optimality updates until the residual is below tolerance."""
+    """runs the Bellman optimality updates until the residual is below tolerance."""
 
     utilities = np.zeros(mdp.num_states, dtype=float)
     history = [utilities.copy()]
@@ -33,6 +33,8 @@ def value_iteration(
     if mdp.gamma == 0.0:
         threshold = epsilon
     else:
+        #the standard discounted-MDP stopping rule that bounds the utility error 
+        #induced by terminating value iteration early.
         threshold = epsilon * (1.0 - mdp.gamma) / mdp.gamma
 
     converged = False
@@ -75,7 +77,7 @@ def value_iteration(
 def evaluate_policy_exact(
     mdp: GridWorldMDP, policy: Mapping[State, Action]
 ) -> np.ndarray:
-    """Evaluate a fixed policy using exact linear-system solution."""
+    """Evaluate a fixed policy by solving (I - gamma * P_pi) U = R exactly."""
 
     policy_transition_matrix = mdp.build_policy_transition_matrix(policy)
     identity = np.eye(mdp.num_states, dtype=float)
@@ -84,8 +86,8 @@ def evaluate_policy_exact(
     try:
         return np.linalg.solve(system_matrix, mdp.reward_vector)
     except np.linalg.LinAlgError:
-        # Fallback only for numerical safety. The assignment requires exact
-        # evaluation via linear equations, so solve() is always attempted first.
+        #implemented fallback only for numerical safety as assignment requires exact 
+        #policy evaluation via linear equations, so solve() is always used first.
         return np.linalg.lstsq(system_matrix, mdp.reward_vector, rcond=None)[0]
 
 
@@ -93,9 +95,12 @@ def policy_iteration(
     mdp: GridWorldMDP,
     max_iterations: int = 10_000,
 ) -> AlgorithmResult:
-    """Run policy iteration with exact policy evaluation."""
+    """Runs the policy iteration with exact linear-system policy evaluation."""
 
+    #initialize with a deterministic policy so results are reproducible.
     policy: Dict[State, Action] = {state: ACTIONS[0] for state in mdp.states}
+    #storing an iteration-0 baseline so policy-iteration plots can be compared
+    #directly with value-iteration plots.
     history = [np.zeros(mdp.num_states, dtype=float)]
     converged = False
     iteration_count = 0
@@ -108,6 +113,7 @@ def policy_iteration(
         policy_stable = True
         improved_policy: Dict[State, Action] = {}
         for state in mdp.states:
+            #one-step lookahead over all actions for policy improvement.
             best_action = mdp.best_action(utilities, state)
             improved_policy[state] = best_action
             if best_action != policy[state]:

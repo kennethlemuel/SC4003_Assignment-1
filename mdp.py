@@ -89,6 +89,8 @@ class GridWorldMDP:
             [self.reward_by_state[state] for state in self.states],
             dtype=float,
         )
+        # Build reusable transition structures once so both algorithms solve
+        # exactly the same MDP rather than reconstructing transitions separately.
         self.transitions = self._build_transition_model()
         self.transition_matrices = self._build_transition_matrices()
         self.representative_states = self._sanitize_representative_states(
@@ -127,6 +129,16 @@ class GridWorldMDP:
     def _build_transition_model(
         self,
     ) -> Dict[State, Dict[Action, Tuple[TransitionOutcome, ...]]]:
+        """Building the explicit state-action-next-state transition model.
+
+        For an intended action a, the environment follows:
+        - a with probability 0.8
+        - the two perpendicular actions with probability 0.1 each
+
+        When a move hits a wall or boundary, the agent remains in the same state.
+        If multiple outcomes lead to the same next state, their probability mass
+        is combined into a single TransitionOutcome entry.
+        """
         transitions: Dict[State, Dict[Action, Tuple[TransitionOutcome, ...]]] = {}
         for state in self.states:
             transitions[state] = {}
@@ -142,6 +154,8 @@ class GridWorldMDP:
                     probability_by_state[next_state] = (
                         probability_by_state.get(next_state, 0.0) + probability
                     )
+                # Keep outcomes in a deterministic order so transition inspection
+                # and downstream exports are reproducible.
                 ordered = tuple(
                     TransitionOutcome(next_state=next_state, probability=probability)
                     for next_state, probability in sorted(
@@ -153,6 +167,7 @@ class GridWorldMDP:
         return transitions
 
     def _build_transition_matrices(self) -> Dict[Action, np.ndarray]:
+        """Constructs a one transition matrix P_a for each action."""
         matrices: Dict[Action, np.ndarray] = {}
         for action in ACTIONS:
             matrix = np.zeros((self.num_states, self.num_states), dtype=float)
@@ -171,6 +186,7 @@ class GridWorldMDP:
         return not self.in_bounds(row, col) or self.grid[row][col] == "W"
 
     def move(self, state: State, action: Action) -> State:
+        """Applies a single deterministic move, staying put on walls/boundaries."""
         row, col = state
         delta_row, delta_col = ACTION_DELTAS[action]
         next_row = row + delta_row
@@ -190,6 +206,7 @@ class GridWorldMDP:
     def best_action(
         self, utilities: np.ndarray, state: State, tie_tolerance: float = 1e-12
     ) -> Action:
+        """Return the greedy action using the fixed ACTIONS tie-breaking order."""
         best_action = ACTIONS[0]
         best_value = -np.inf
         for action in ACTIONS:
@@ -205,6 +222,7 @@ class GridWorldMDP:
     def build_policy_transition_matrix(
         self, policy: Mapping[State, Action]
     ) -> np.ndarray:
+        """Constructing P_pi for exact policy evaluation in policy iteration."""
         matrix = np.zeros((self.num_states, self.num_states), dtype=float)
         for state in self.states:
             row = self.state_to_index[state]

@@ -4,6 +4,7 @@ from mdp import GridWorldMDP
 
 
 def create_part1_environment() -> GridWorldMDP:
+    """this returns the exact 6x6 assignment maze for Part 1."""
     grid = [
         ["G", "W", "G", "E", "E", "G"],
         ["E", "B", "E", "G", "W", "B"],
@@ -13,12 +14,12 @@ def create_part1_environment() -> GridWorldMDP:
         ["E", "E", "E", "E", "E", "E"],
     ]
     representative_states = [
-        (3, 2),  # Start cell
-        (0, 0),  # Top-left green
-        (1, 3),  # Interior green
-        (1, 5),  # Brown cell
-        (5, 0),  # Bottom-left empty
-        (5, 5),  # Bottom-right empty
+        (3, 2),  #the start cell shown as S in the maze.
+        (0, 0),  #top-left green reward cell.
+        (1, 3),  #interior green reward cell.
+        (1, 5),  #brown penalty cell.
+        (5, 0),  #bottom-left empty cell.
+        (5, 5),  #bottom-right empty cell.
     ]
     return GridWorldMDP(
         grid=grid,
@@ -29,6 +30,7 @@ def create_part1_environment() -> GridWorldMDP:
 
 
 def create_part2_environment() -> GridWorldMDP:
+    """this returns a larger custom made maze with bottlenecks and reward-risk trade-offs."""
     grid = [
         ["E", "E", "E", "W", "G", "E", "E", "W", "G", "E"],
         ["W", "W", "E", "W", "B", "W", "E", "W", "B", "E"],
@@ -42,12 +44,12 @@ def create_part2_environment() -> GridWorldMDP:
         ["B", "W", "E", "E", "E", "W", "G", "E", "E", "E"],
     ]
     representative_states = [
-        (4, 0),  # Start cell
-        (0, 4),  # Northern green
-        (4, 2),  # Central green
-        (5, 2),  # Risky brown on corridor
-        (7, 4),  # Southern green with narrow access
-        (9, 6),  # Bottom green region
+        (4, 0),  #the start cell.
+        (0, 4),  #Northern green reward region.
+        (4, 2),  #Central green reward region.
+        (5, 2),  #a brown cell on a risky corridor.
+        (7, 4),  #Southern green with narrow access.
+        (9, 6),  #the bottom green reward region.
     ]
     return GridWorldMDP(
         grid=grid,
